@@ -12,6 +12,8 @@ The project started as an exploratory notebook analysis and was later refactored
 - Features: MFCC means, zero-crossing rate, and spectral centroid
 - Model: Random Forest classifier with SMOTE class balancing
 - Deployment: FastAPI service containerized with Docker
+- Testing: Pytest tests for feature extraction, inference, and API behavior
+- Logging: Structured prediction logging for API requests
 
 ## Why This Project Matters
 
@@ -25,6 +27,7 @@ raw audio files
 → single-file inference
 → FastAPI prediction endpoint
 → Dockerized deployment
+→ automated tests
 ```
 
 The goal is not only to build a model, but to package it so it can be reused as a scoring service.
@@ -34,6 +37,7 @@ The goal is not only to build a model, but to package it so it can be reused as 
 ```text
 .
 ├── app/
+│   ├── __init__.py
 │   └── main.py                         # FastAPI application
 │
 ├── artifacts/
@@ -52,6 +56,7 @@ The goal is not only to build a model, but to package it so it can be reused as 
 │
 ├── src/
 │   └── audio_anomaly/
+│       ├── __init__.py
 │       ├── config.py
 │       ├── data.py                     # Dataset construction
 │       ├── evaluation.py               # Classification metrics
@@ -60,6 +65,10 @@ The goal is not only to build a model, but to package it so it can be reused as 
 │       └── train.py                    # Model training pipeline
 │
 ├── tests/
+│   ├── test_api.py
+│   ├── test_features.py
+│   └── test_inference.py
+│
 ├── docs/
 ├── Dockerfile
 ├── requirements.txt
@@ -190,7 +199,18 @@ Example response:
   "prediction": 1,
   "prediction_label": "abnormal",
   "normal_probability": 0.04,
-  "abnormal_probability": 0.96
+  "abnormal_probability": 0.96,
+  "model_metadata": {
+    "model_name": "fan_anomaly_random_forest_smote",
+    "model_version": "v1",
+    "asset_scope": "fan/id_00",
+    "problem_type": "binary_classification",
+    "feature_count": 15,
+    "positive_class": {
+      "label": 1,
+      "name": "abnormal"
+    }
+  }
 }
 ```
 
@@ -208,7 +228,7 @@ http://127.0.0.1:8000/docs
 
 Use the `/predict` endpoint to upload a `.wav` file and receive a prediction.
 
-### Health check
+### Health Check
 
 ```bash
 curl http://127.0.0.1:8000/health
@@ -220,12 +240,54 @@ Expected response:
 {"status":"ok"}
 ```
 
-### Prediction request
+### Prediction Request
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
   -F "file=@fan/id_00/abnormal/00000000.wav"
 ```
+
+Example response fields:
+
+```json
+{
+  "file_name": "00000000.wav",
+  "prediction": 1,
+  "prediction_label": "abnormal",
+  "normal_probability": 0.04,
+  "abnormal_probability": 0.96,
+  "latency_seconds": 0.1234,
+  "model_metadata": {
+    "model_name": "fan_anomaly_random_forest_smote",
+    "model_version": "v1",
+    "asset_scope": "fan/id_00",
+    "problem_type": "binary_classification",
+    "feature_count": 15
+  }
+}
+```
+
+## Prediction Logging
+
+The FastAPI service logs each prediction request with structured fields, including:
+
+```text
+file_name
+prediction_label
+abnormal_probability
+model_version
+asset_scope
+latency_seconds
+status
+```
+
+Example log line:
+
+```text
+prediction_request status=success file_name=00000000.wav prediction_label=abnormal abnormal_probability=0.9600 model_version=v1 asset_scope=fan/id_00 latency_seconds=0.1234
+```
+
+Rejected non-wav uploads are also logged with a rejected status.
 
 ## Run with Docker
 
@@ -260,6 +322,16 @@ curl -X POST "http://127.0.0.1:8001/predict" \
   -F "file=@fan/id_00/abnormal/00000000.wav"
 ```
 
+## Run Tests
+
+The test suite validates feature extraction, model artifact inference, and the FastAPI prediction endpoint.
+
+```bash
+PYTHONPATH=src:. pytest
+```
+
+The tests assume the local MIMII fan audio files and trained model artifact are available.
+
 ## Model Artifact Notes
 
 The trained model is saved as:
@@ -282,39 +354,15 @@ The model manifest records the expected feature columns, class labels, model ver
 - Performance may not generalize to other fan IDs without recalibration or retraining.
 - The model uses summary-level audio features rather than deep audio embeddings.
 - The API currently supports `.wav` file uploads only.
+- The current tests depend on local MIMII data and a trained model artifact.
 - The project is intended as a deployment-focused ML portfolio project, not a production monitoring system.
-
-## Run Tests
-
-The test suite validates feature extraction, model artifact inference, and the FastAPI prediction endpoint.
-
-```bash
-PYTHONPATH=src:. pytest
-```
-
-The tests assume the local MIMII fan audio files and trained model artifact are available.
-
-
-### 3. Next improvement after committing
-
-Add **model metadata to the `/predict` response**, pulled from `artifacts/model_manifest.json`.
-
-That gives reviewers something production-like:
-
-```json
-{
-  "prediction_label": "abnormal",
-  "abnormal_probability": 0.96,
-  "model_version": "v1",
-  "asset_scope": "fan/id_00"
-}
-```
 
 ## Future Improvements
 
-- Add batch scoring endpoint.
-- Add model version to API responses.
-- Add logging for prediction requests.
+- Add a batch scoring API endpoint.
+- Add request IDs to prediction logs.
 - Add monitoring checks for feature drift and prediction distribution shifts.
 - Compare generalization across additional MIMII fan IDs.
-- Add CI workflow for linting and tests.
+- Add a small synthetic audio fixture so tests can run without the full MIMII dataset.
+- Add a GitHub Actions workflow for linting and tests.
+- Add a model card with intended use, assumptions, and risks.
