@@ -1,0 +1,41 @@
+{
+  "model_name": "fan_anomaly_random_forest_smote",
+  "model_version": "v1",
+  "created_at": "2026-05-17T19:11:31.521856+00:00",
+  "asset_scope": "fan/id_00",
+  "problem_type": "binary_classification",
+  "positive_class": {
+    "label": 1,
+    "name": "abnormal"
+  },
+  "negative_class": {
+    "label": 0,
+    "name": "normal"
+  },
+  "feature_columns": [
+    "mfcc_1_mean",
+    "mfcc_2_mean",
+    "mfcc_3_mean",
+    "mfcc_4_mean",
+    "mfcc_5_mean",
+    "mfcc_6_mean",
+    "mfcc_7_mean",
+    "mfcc_8_mean",
+    "mfcc_9_mean",
+    "mfcc_10_mean",
+    "mfcc_11_mean",
+    "mfcc_12_mean",
+    "mfcc_13_mean",
+    "zero_crossing_rate_mean",
+    "spectral_centroid_mean"
+  ],
+  "model_pipeline": [
+    "StandardScaler",
+    "SMOTE",
+    "RandomForestClassifier"
+  ],
+  "training_data": "fan/id_00",
+  "random_state": 42,
+  "test_size": 0.2,
+  "stratified_split": true
+}
