@@ -1,7 +1,7 @@
 {
   "model_name": "fan_anomaly_random_forest_smote",
   "model_version": "v1",
-  "created_at": "2026-05-17T19:11:31.521856+00:00",
+  "created_at": "2026-05-18T06:17:55.360913+00:00",
   "asset_scope": "fan/id_00",
   "problem_type": "binary_classification",
   "positive_class": {
@@ -37,5 +37,13 @@
   "training_data": "fan/id_00",
   "random_state": 42,
   "test_size": 0.2,
-  "stratified_split": true
+  "stratified_split": true,
+  "split_files": {
+    "train": "artifacts/splits/train_files.csv",
+    "test": "artifacts/splits/test_files.csv"
+  },
+  "split_counts": {
+    "train_rows": 1134,
+    "test_rows": 284
+  }
 }

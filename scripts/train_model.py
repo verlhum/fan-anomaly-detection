@@ -14,21 +14,43 @@ from audio_anomaly.train import train_model
 
 def main():
     base_dir = Path("fan/id_00")
+    
     artifact_dir = Path("artifacts")
     artifact_dir.mkdir(parents=True, exist_ok=True)
+    
+    split_dir = artifact_dir / "splits"
+    split_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Loading audio data from: {base_dir}")
     df = build_audio_dataset(base_dir)
 
-    X = df[FEATURE_COLUMNS]
-    y = df["label"]
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
+    train_df, test_df = train_test_split(
+        df,
         test_size=0.2,
-        stratify=y,
+        stratify=df["label"],
         random_state=42,
+    )
+    
+    split_dir = artifact_dir / "splits"
+    split_dir.mkdir(parents=True, exist_ok=True)
+    
+    X_train = train_df[FEATURE_COLUMNS]
+    y_train = train_df["label"]
+
+    X_test = test_df[FEATURE_COLUMNS]
+    y_test = test_df["label"]
+    
+    split_dir = artifact_dir / "splits"
+    split_dir.mkdir(parents=True, exist_ok=True)
+
+    train_df[["file_path", "file_name", "label_name", "label"]].to_csv(
+        split_dir / "train_files.csv",
+        index=False,
+    )
+
+    test_df[["file_path", "file_name", "label_name", "label"]].to_csv(
+        split_dir / "test_files.csv",
+        index=False,
     )
 
     print("Training model...")
@@ -84,6 +106,14 @@ def main():
         "random_state": 42,
         "test_size": 0.2,
         "stratified_split": True,
+        "split_files": {
+            "train": "artifacts/splits/train_files.csv",
+            "test": "artifacts/splits/test_files.csv"
+        },
+        "split_counts": {
+            "train_rows": int(len(train_df)),
+            "test_rows": int(len(test_df)),
+        },
     }
 
     with open(artifact_dir / "model_manifest.json", "w") as f:
