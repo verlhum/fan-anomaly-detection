@@ -284,9 +284,34 @@ The model manifest records the expected feature columns, class labels, model ver
 - The API currently supports `.wav` file uploads only.
 - The project is intended as a deployment-focused ML portfolio project, not a production monitoring system.
 
+## Run Tests
+
+The test suite validates feature extraction, model artifact inference, and the FastAPI prediction endpoint.
+
+```bash
+PYTHONPATH=src:. pytest
+```
+
+The tests assume the local MIMII fan audio files and trained model artifact are available.
+
+
+### 3. Next improvement after committing
+
+Add **model metadata to the `/predict` response**, pulled from `artifacts/model_manifest.json`.
+
+That gives reviewers something production-like:
+
+```json
+{
+  "prediction_label": "abnormal",
+  "abnormal_probability": 0.96,
+  "model_version": "v1",
+  "asset_scope": "fan/id_00"
+}
+```
+
 ## Future Improvements
 
-- Add automated tests for feature extraction and inference.
 - Add batch scoring endpoint.
 - Add model version to API responses.
 - Add logging for prediction requests.
