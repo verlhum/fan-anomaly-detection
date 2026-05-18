@@ -36,6 +36,7 @@ def test_predict_endpoint_accepts_wav_file():
         "abnormal_probability",
         "model_metadata",
         "file_name",
+        "latency_seconds",
     }
 
     assert expected_keys.issubset(result.keys())
@@ -52,6 +53,8 @@ def test_predict_endpoint_accepts_wav_file():
     assert metadata["asset_scope"] is not None
     assert metadata["problem_type"] == "binary_classification"
     assert metadata["feature_count"] > 0
+    
+    assert result["latency_seconds"] >= 0
 
 
 def test_predict_endpoint_rejects_non_wav_file():
