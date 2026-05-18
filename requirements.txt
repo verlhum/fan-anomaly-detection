@@ -7,3 +7,7 @@ scikit-learn==1.5.1
 seaborn==0.13.2
 soundfile==0.13.1
 tqdm==4.66.5
+joblib
+fastapi
+uvicorn
+python-multipart
